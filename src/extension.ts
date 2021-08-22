@@ -7,46 +7,40 @@ const vars = new Map();
 
 type Value = { name: string, value: string };
 
-export enum ValueKind {
-  color,
-  other,
-}
-
-
-export const getValueKind = (str: string): ValueKind => {
+export const getValueKind = (str: string): vscode.CompletionItemKind => {
   if (isColor(str)) {
-    return ValueKind.color;
+    return vscode.CompletionItemKind.Color;
   }
 
-  return ValueKind.other;
+  return vscode.CompletionItemKind.Variable;
 };
 
-export const createCompletionItem = (
-  propertyName: string,
-  propertyValue: string,
-  previousStr: string
-) => {
-  const variable = propertyName;
+type ItemBase = {
+  name: string,
+  value: string,
+  range: vscode.Range | undefined
+  isCssPropLine: boolean
+};
+
+export const createCompletionItem = ({
+  name,
+  value,
+  range,
+  isCssPropLine
+}: ItemBase) => {
+  const variable = name;
   const variableWithoutDash = variable.substring(2);
   const completion = new vscode.CompletionItem(variable);
 
-  completion.label = propertyName;
+  completion.label = name;
   completion.filterText = variableWithoutDash;
-  completion.kind = vscode.CompletionItemKind.Variable;
-  completion.documentation = propertyValue;
+  completion.documentation = value;
+  completion.insertText = isCssPropLine ? `'var(${variable})'` : `var(${variable})`;
+  completion.detail = value;
+  completion.kind = getValueKind(value);
 
-  completion.detail = propertyValue;
-
-  if (previousStr === '--') {
-    completion.insertText = variableWithoutDash;
-  } else if (previousStr === 'r(') {
-    completion.insertText = variable;
-  } else {
-    completion.insertText = `var(${variable})`;
-  }
-
-  if (getValueKind(propertyValue) === ValueKind.color) {
-    completion.kind = vscode.CompletionItemKind.Color;
+  if (range) {
+    completion.range = range;
   }
 
   return completion;
@@ -55,7 +49,6 @@ export const createCompletionItem = (
 export async function activate(context: vscode.ExtensionContext) {
   console.log('Congratulations, your extension "styled-global-variable-autocomplete" is now active!');
   const filesUri = await vscode.workspace.findFiles('**/*.globals.{ts,js}', undefined);
-
 
   const filesPromises = filesUri.map(file => vscode.workspace.openTextDocument(file).then(document => document.getText()));
 
@@ -68,6 +61,7 @@ export async function activate(context: vscode.ExtensionContext) {
         const lineTrim = line.trim();
         const [name, value] = lineTrim.split(":");
 
+        // Prevent duplicate or empty variables
         if (!value || vars.has(name)) { return; };
 
         vars.set(name, value);
@@ -78,16 +72,16 @@ export async function activate(context: vscode.ExtensionContext) {
 
   const provider = vscode.languages.registerCompletionItemProvider(['javascript', 'typescript'], {
     provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken) {
-      const lastCharPos = new vscode.Position(
-        position.line,
-        0
-      );
+      const range = document.getWordRangeAtPosition(position, /\S+/);
+      const currentLine = document.lineAt(position.line);
+      const isCssPropLine = currentLine.text.includes('css={{');
 
-      const previousStr = document.getText(
-        new vscode.Range(lastCharPos, position)
-      );
-
-      const variables = finalItems.map(({ name, value }) => createCompletionItem(name, value, previousStr));
+      const variables = finalItems.map(({ name, value }) => createCompletionItem({
+        name,
+        value,
+        range,
+        isCssPropLine
+      }));
 
       return variables;
     }
