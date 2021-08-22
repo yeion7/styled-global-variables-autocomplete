@@ -2,47 +2,9 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import * as isColor from 'is-color';
+import { getValueKind, createCompletionItem } from './utils';
 
-type Value = { name: string, value: string };
-
-export const getValueKind = (str: string): vscode.CompletionItemKind => {
-  if (isColor(str)) {
-    return vscode.CompletionItemKind.Color;
-  }
-
-  return vscode.CompletionItemKind.Variable;
-};
-
-type ItemBase = {
-  name: string,
-  value: string,
-  range: vscode.Range | undefined
-  isCssPropLine: boolean
-};
-
-export const createCompletionItem = ({
-  name,
-  value,
-  range,
-  isCssPropLine
-}: ItemBase) => {
-  const variable = name;
-  const variableWithoutDash = variable.substring(2);
-  const completion = new vscode.CompletionItem(variable);
-
-  completion.label = name;
-  completion.filterText = variableWithoutDash;
-  completion.documentation = value;
-  completion.insertText = isCssPropLine ? `'var(${variable})'` : `var(${variable})`;
-  completion.detail = value;
-  completion.kind = getValueKind(value);
-
-  if (range) {
-    completion.range = range;
-  }
-
-  return completion;
-};
+type Var = { name: string, value: string };
 
 export async function activate(context: vscode.ExtensionContext) {
   console.log('Congratulations, your extension "styled-global-variable-autocomplete" is now active!');
@@ -67,7 +29,7 @@ export async function activate(context: vscode.ExtensionContext) {
         vars.set(name, value);
         return { name, value };
       })
-      .filter(Boolean) as Value[];
+      .filter(Boolean) as Var[];
   });
 
   const provider = vscode.languages.registerCompletionItemProvider(['javascript', 'typescript'], {
