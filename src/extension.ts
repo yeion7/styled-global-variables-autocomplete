@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 import * as isColor from 'is-color';
 import { getValueKind, createCompletionItem } from './utils';
 
-type Var = { name: string, value: string };
+type Var = { name: string, value: string, uri: vscode.Uri, range: vscode.Range };
 type Config = {
   include: vscode.GlobPattern
   exclude: vscode.GlobPattern | undefined
@@ -22,30 +22,38 @@ export async function activate(context: vscode.ExtensionContext) {
   const filesUri = await vscode.workspace.findFiles(includeFilesGlob, excludeFilesGlob);
 
   // Read all found files
-  const filesPromises = filesUri.map(file => vscode.workspace.openTextDocument(file).then(document => document.getText()));
-  const files = await Promise.all(filesPromises);
+  const filesPromises = filesUri.map(file => vscode.workspace.openTextDocument(file));
+  const documents = await Promise.all(filesPromises);
 
   // Get all variables from lines
-  const finalItems = files.flatMap(file => {
+  const finalItems = documents.flatMap(document => {
+    const file = document.getText();
     const vars = new Map();
 
     return file.split(/\r?\n/)
-      .filter(line => line.trim().startsWith('--'))
-      .map(line => {
+      .map((line, i) => {
         const lineTrim = line.trim();
-        const [name, value] = lineTrim.split(":");
+        const isVariable = line.trim().startsWith('--');
+        if (!isVariable) { return; };
 
+        const [name, value] = lineTrim.split(":");
         // Prevent duplicate or empty variables
         if (!value || vars.has(name)) { return; };
 
         vars.set(name, value);
-        return { name, value };
+        return {
+          name,
+          value,
+          uri: document.uri,
+          range: new vscode.Range(new vscode.Position(i, 4), new vscode.Position(i, name.length + 4))
+        } as Var;
       })
       .filter(Boolean) as Var[];
   });
 
-  const provider = vscode.languages.registerCompletionItemProvider(autoCompleteOn, {
-    provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken) {
+  // Support autocomplete
+  const completionProvider = vscode.languages.registerCompletionItemProvider(autoCompleteOn, {
+    provideCompletionItems(document: vscode.TextDocument, position: vscode.Position) {
       const range = document.getWordRangeAtPosition(position, /\S+/);
       const currentLine = document.lineAt(position.line);
       const isCssPropLine = currentLine.text.includes('css={{');
@@ -61,7 +69,25 @@ export async function activate(context: vscode.ExtensionContext) {
     }
   });
 
-  context.subscriptions.push(provider);
+  // Support go to definition
+  const definitionProvider = vscode.languages.registerDefinitionProvider(autoCompleteOn, {
+    async provideDefinition(document: vscode.TextDocument, position: vscode.Position) {
+      const range = document.getWordRangeAtPosition(position, /\S+/);
+
+      if (!range) { return []; };
+
+      const variable = document.getText(range);
+
+      if (!variable.includes("var(--")) { return []; };
+
+      return finalItems
+        .filter(({ name }) => variable.includes(name))
+        .map(({ name, uri, range }) => new vscode.Location(uri, range));
+    }
+  });
+
+  context.subscriptions.push(completionProvider);
+  context.subscriptions.push(definitionProvider);
 
   return true;
 }
