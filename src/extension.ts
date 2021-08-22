@@ -3,8 +3,6 @@
 import * as vscode from 'vscode';
 import * as isColor from 'is-color';
 
-const vars = new Map();
-
 type Value = { name: string, value: string };
 
 export const getValueKind = (str: string): vscode.CompletionItemKind => {
@@ -55,6 +53,8 @@ export async function activate(context: vscode.ExtensionContext) {
   const files = await Promise.all(filesPromises);
 
   const finalItems = files.flatMap(file => {
+    const vars = new Map();
+
     return file.split(/\r?\n/)
       .filter(line => line.trim().startsWith('--'))
       .map(line => {
