@@ -1,70 +1,33 @@
-# styled-global-variable-autocomplete README
+# Styled Global Variables Autocomplete
 
-This is the README for your extension "styled-global-variable-autocomplete". After writing up a brief description, we recommend including the following sections.
+[Visual Studio Code](https://code.visualstudio.com) extension that provides autocomplete for CSS variables from styled-components global styles.
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
-
-For example if there is an image subfolder under your extension project workspace:
-
-\!\[feature X\]\(images/feature-x.png\)
-
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
-
-## Requirements
-
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+* CSS variables autocomplete
+<!-- Insert gif -->
+* Support Go to definition
+<!-- Insert gif -->
+* Preview variable value on hover
+<!-- Insert gif -->
 
 ## Extension Settings
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+### `variablesAutocomplete.include` 
+A glob pattern to find files where extract variables
 
-For example:
+default: `"**/*.globals.{ts,js,tsx,jsx}"`
 
-This extension contributes the following settings:
+> Tip: in order to keep the performance try to use a explicit pattern, otherwise we could retrieve so many files and having a bad performance
 
-* `myExtension.enable`: enable/disable this extension
-* `myExtension.thing`: set to `blah` to do something
+### `variablesAutocomplete.exclude`
+A glob pattern to ignore
 
-## Known Issues
+### `variablesAutocomplete.autoCompleteOn`
+Languages to enable autocomplete. See https://code.visualstudio.com/Docs/extensionAPI/vscode-api#DocumentSelector
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+default: `["javascript", "typescript", "javascriptreact", "typescriptreact"]`
 
-## Release Notes
+## Raising an issue
 
-Users appreciate release notes as you update your extension.
-
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
------------------------------------------------------------------------------------------------------------
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-**Note:** You can author your README using Visual Studio Code.  Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux)
-* Toggle preview (`Shift+CMD+V` on macOS or `Shift+Ctrl+V` on Windows and Linux)
-* Press `Ctrl+Space` (Windows, Linux) or `Cmd+Space` (macOS) to see a list of Markdown snippets
-
-### For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+Please check the issues list to see if it has already been raised. If it has you can vote on it with a thumbsUp emoji. Issues with the most votes tend to be prioritised.
