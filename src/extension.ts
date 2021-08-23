@@ -10,12 +10,18 @@ type Config = {
   autoCompleteOn: vscode.DocumentSelector
 };
 
+const defaultConfig: Config  = {
+  include: '**/*.globals.{ts,js,tsx,jsx}',
+  exclude: undefined,
+  autoCompleteOn: ['javascript', 'typescript', 'javascriptreact', 'typescriptreact']
+};
+
 export async function activate(context: vscode.ExtensionContext) {
   console.log('Congratulations, your extension "styled-global-variable-autocomplete" is now active!');
   const config = vscode.workspace.getConfiguration('variablesAutocomplete');
-  const includeFilesGlob = config.get<Config['include']>('include', '**/*.globals.{ts,js}');
-  const excludeFilesGlob = config.get<Config['exclude']>('exclude');
-  const autoCompleteOn = config.get<Config['autoCompleteOn']>('autoCompleteOn', ['javascript', 'typescript']);
+  const includeFilesGlob = config.get<Config['include']>('include', defaultConfig.include);
+  const excludeFilesGlob = config.get<Config['exclude']>('exclude', defaultConfig.exclude);
+  const autoCompleteOn = config.get<Config['autoCompleteOn']>('autoCompleteOn', defaultConfig.autoCompleteOn);
 
   // Find all files that match configured criteria
   const filesUri = await vscode.workspace.findFiles(includeFilesGlob, excludeFilesGlob);
