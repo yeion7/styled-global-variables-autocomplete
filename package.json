@@ -1,11 +1,16 @@
 {
-  "name": "styled-global-variable-autocomplete",
-  "displayName": "styled-global-variable-autocomplete",
+  "name": "styled-global-variables-autocomplete",
+  "displayName": "Styled Global Variables Autocomplete",
   "description": "Autocomplete css variables from styled-component global style",
-  "version": "0.0.1",
+  "version": "0.5.0",
+  "publisher": "yeion7",
   "engines": {
     "vscode": "^1.59.0"
   },
+  "keywords": [
+    "autocomplete",
+    "styled-components"
+  ],
   "categories": [
     "Other"
   ],
@@ -14,7 +19,26 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
-    "commands": []
+    "configuration": {
+      "type": "object",
+      "title": "variables autocomplete configuration",
+      "properties": {
+        "variablesAutocomplete.include": {
+          "type": "string",
+          "default": "**/*.globals.{ts,js,tsx,jsx}",
+          "description": "A file glob pattern to match file paths against"
+        },
+        "variablesAutocomplete.exclude": {
+          "type": "string",
+          "description": "A file glob pattern to match file paths against"
+        },
+        "variablesAutocomplete.autoCompleteOn": {
+          "type": "array",
+          "default": ["javascript", "typescript", "javascriptreact", "typescriptreact"],
+          "description": "Document selector for language or file. See https://code.visualstudio.com/Docs/extensionAPI/vscode-api#DocumentSelector"
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
