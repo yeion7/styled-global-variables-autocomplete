@@ -39,6 +39,7 @@
     "vscode-test": "^1.5.2"
   },
   "dependencies": {
+    "datauri": "^4.1.0",
     "is-color": "^1.0.2"
   }
 }
