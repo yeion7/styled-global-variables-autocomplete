@@ -1,5 +1,7 @@
 # Styled Global Variables Autocomplete
 
+![fields](media/telescope.png)
+
 [Visual Studio Code](https://code.visualstudio.com) extension that provides autocomplete for CSS variables from styled-components global styles.
 
 ## Features

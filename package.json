@@ -4,9 +4,14 @@
   "description": "Autocomplete css variables from styled-component global style",
   "version": "0.5.0",
   "publisher": "yeion7",
+  "icon": "media/telescope.png",
   "engines": {
     "vscode": "^1.59.0"
   },
+  "extensionKind":[
+    "ui",
+    "workspace"
+  ],
   "keywords": [
     "autocomplete",
     "styled-components"
