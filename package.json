@@ -14,6 +14,10 @@
   "categories": [
     "Other"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yeion7/styled-global-variables-autocomplete"
+  },
   "activationEvents": [
     "onStartupFinished"
   ],
@@ -34,7 +38,12 @@
         },
         "variablesAutocomplete.autoCompleteOn": {
           "type": "array",
-          "default": ["javascript", "typescript", "javascriptreact", "typescriptreact"],
+          "default": [
+            "javascript",
+            "typescript",
+            "javascriptreact",
+            "typescriptreact"
+          ],
           "description": "Document selector for language or file. See https://code.visualstudio.com/Docs/extensionAPI/vscode-api#DocumentSelector"
         }
       }
