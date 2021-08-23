@@ -1,19 +1,24 @@
 # Styled Global Variables Autocomplete
 
-![fields](media/telescope.png)
+![fields](./media/telescope.png)
 
 [Visual Studio Code](https://code.visualstudio.com) extension that provides autocomplete for CSS variables from styled-components global styles.
 
 ## Features
 
-* CSS variables autocomplete
-<!-- Insert gif -->
-* Support Go to definition
-<!-- Insert gif -->
-* Preview variable value on hover
-<!-- Insert gif -->
+### CSS variables autocomplete
 
-## Extension Settings
+![Autocomplete Variables](./media/autocomplete.gif)
+
+### Go to definition Support
+
+![Go to definition](./media/definition.gif)
+
+### Preview variable value on hover
+
+![Preview value on hover](./media/hover.gif)
+
+### Extension Settings
 
 ### `variablesAutocomplete.include` 
 A glob pattern to find files where extract variables
