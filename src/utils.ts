@@ -1,65 +1,81 @@
-import * as vscode from 'vscode';
-import * as isColor from 'is-color';
+import * as vscode from "vscode";
+import * as isColor from "is-color";
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
-const DatauriParser = require('datauri/parser');
+const DatauriParser = require("datauri/parser");
 
 type ItemBase = {
-    name: string,
-    value: string,
-    range: vscode.Range | undefined
-    isCssPropLine: boolean
+  name: string;
+  value: string;
+  range: vscode.Range | undefined;
+  isCssPropLine: boolean;
+  isVarPresent: boolean;
 };
 
 export const getValueKind = (str: string): vscode.CompletionItemKind => {
-    if (isColor(str)) {
-        return vscode.CompletionItemKind.Color;
-    }
+  if (isColor(str)) {
+    return vscode.CompletionItemKind.Color;
+  }
 
-    return vscode.CompletionItemKind.Variable;
+  return vscode.CompletionItemKind.Variable;
 };
 
 export const getCompletionItem = ({
-    name,
-    value,
-    range,
-    isCssPropLine
+  name,
+  value,
+  range,
+  isCssPropLine,
+  isVarPresent,
 }: ItemBase) => {
-    const variable = name;
-    const variableWithoutDash = variable.substring(2);
-    const completion = new vscode.CompletionItem(variable);
+  const variable = name;
+  const variableWithoutDash = variable.substring(1);
+  const completion = new vscode.CompletionItem(variable);
 
-    completion.label = name;
-    completion.filterText = variableWithoutDash;
-    completion.documentation = value;
-    completion.insertText = isCssPropLine ? `'var(${variable})'` : `var(${variable})`;
-    completion.detail = value;
-    completion.kind = getValueKind(value);
+  completion.label = name;
+  completion.filterText = variableWithoutDash;
+  completion.documentation = value;
+  completion.insertText = isVarPresent
+    ? `${variable}`
+    : isCssPropLine
+      ? `'var(${variable})'`
+      : `var(${variable})`;
+  completion.detail = value;
+  completion.kind = getValueKind(value);
 
-    if (range) {
-        completion.range = range;
-    }
+  if (range) {
+    completion.range = isVarPresent
+      ? range.with(range.start.translate(0, 4), range.end.translate(0, -1))
+      : range;
+  }
 
-    return completion;
+  return completion;
 };
 
+export function getVariableAtPosition(
+  document: vscode.TextDocument,
+  position: vscode.Position
+) {
+  const currentRange = document.getWordRangeAtPosition(position, /\S+/);
 
-export function getVariableAtPosition(document: vscode.TextDocument, position: vscode.Position) {
-    const currentRange = document.getWordRangeAtPosition(position, /\S+/);
+  if (!currentRange) {
+    return;
+  }
 
-    if (!currentRange) { return; };
+  const textAtPosition = document.getText(currentRange);
 
-    const textAtPosition = document.getText(currentRange);
+  if (!textAtPosition.includes("var(--")) {
+    return;
+  }
 
-    if (!textAtPosition.includes("var(--")) { return; };
+  const varRegExp = /\(([^)]+)\)/;
+  const matches = varRegExp.exec(textAtPosition);
+  const variable = matches?.[1];
 
-    const varRegExp = /\(([^)]+)\)/;
-    const matches = varRegExp.exec(textAtPosition);
-    const variable = matches?.[1];
+  if (!variable) {
+    return;
+  }
 
-    if (!variable) { return; };
-
-    return variable;
+  return variable;
 }
 
 /**
@@ -67,10 +83,12 @@ export function getVariableAtPosition(document: vscode.TextDocument, position: v
  * @param value;
  */
 export function getHoverPreview(value: string) {
-    if(!isColor(value)) {return value;};
-    
-    const datauri = new DatauriParser();
-    const src = `<?xml version="1.0" encoding="utf-8"?>
+  if (!isColor(value)) {
+    return value;
+  }
+
+  const datauri = new DatauriParser();
+  const src = `<?xml version="1.0" encoding="utf-8"?>
   <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
   <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
       width="200" height="100">
@@ -79,6 +97,6 @@ export function getHoverPreview(value: string) {
   </svg>
   `;
 
-    datauri.format('.svg', src);
-    return `![](${datauri.content})`;
+  datauri.format(".svg", src);
+  return `![](${datauri.content})`;
 }
