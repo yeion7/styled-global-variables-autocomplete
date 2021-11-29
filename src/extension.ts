@@ -1,11 +1,11 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
-import * as vscode from "vscode";
+import * as vscode from 'vscode';
 import {
   getCompletionItem,
   getHoverPreview,
   getVariableAtPosition,
-} from "./utils";
+} from './utils';
 
 type Var = {
   name: string;
@@ -20,13 +20,13 @@ type Config = {
 };
 
 const defaultConfig: Config = {
-  include: "**/*.globals.{ts,js,tsx,jsx}",
+  include: '**/*.globals.{ts,js,tsx,jsx}',
   exclude: undefined,
   autoCompleteOn: [
-    "javascript",
-    "typescript",
-    "javascriptreact",
-    "typescriptreact",
+    'javascript',
+    'typescript',
+    'javascriptreact',
+    'typescriptreact',
   ],
 };
 
@@ -34,17 +34,17 @@ export async function activate(context: vscode.ExtensionContext) {
   console.log(
     'Congratulations, your extension "styled-global-variable-autocomplete" is now active!'
   );
-  const config = vscode.workspace.getConfiguration("variablesAutocomplete");
-  const includeFilesGlob = config.get<Config["include"]>(
-    "include",
+  const config = vscode.workspace.getConfiguration('variablesAutocomplete');
+  const includeFilesGlob = config.get<Config['include']>(
+    'include',
     defaultConfig.include
   );
-  const excludeFilesGlob = config.get<Config["exclude"]>(
-    "exclude",
+  const excludeFilesGlob = config.get<Config['exclude']>(
+    'exclude',
     defaultConfig.exclude
   );
-  const autoCompleteOn = config.get<Config["autoCompleteOn"]>(
-    "autoCompleteOn",
+  const autoCompleteOn = config.get<Config['autoCompleteOn']>(
+    'autoCompleteOn',
     defaultConfig.autoCompleteOn
   );
 
@@ -69,13 +69,13 @@ export async function activate(context: vscode.ExtensionContext) {
       .split(/\r?\n/)
       .map((line, i) => {
         const lineTrim = line.trim();
-        const isVariable = line.trim().startsWith("--");
+        const isVariable = line.trim().startsWith('--');
         if (!isVariable) {
           return;
         }
 
-        const [name, rawValue] = lineTrim.split(":");
-        const value = rawValue.trim().replace(";", "");
+        const [name, rawValue] = lineTrim.split(':');
+        const value = rawValue.trim().replace(';', '');
 
         // Prevent duplicate or empty variables
         if (!value || vars.has(name)) {
@@ -108,8 +108,8 @@ export async function activate(context: vscode.ExtensionContext) {
       ) {
         const range = document.getWordRangeAtPosition(position, /\S+/);
         const currentLine = document.lineAt(position.line);
-        const isCssPropLine = currentLine.text.includes("css={{");
-        const isVarPresent = currentLine.text.includes("var(");
+        const isCssPropLine = currentLine.text.includes('css={{');
+        const isVarPresent = currentLine.text.includes('var(');
 
         const variables = finalItems.map(({ name, value }) =>
           getCompletionItem({

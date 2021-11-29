@@ -1,8 +1,8 @@
-import * as vscode from "vscode";
-import * as isColor from "is-color";
+import * as vscode from 'vscode';
+import * as isColor from 'is-color';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
-const DatauriParser = require("datauri/parser");
+const DatauriParser = require('datauri/parser');
 
 type ItemBase = {
   name: string;
@@ -63,7 +63,7 @@ export function getVariableAtPosition(
 
   const textAtPosition = document.getText(currentRange);
 
-  if (!textAtPosition.includes("var(--")) {
+  if (!textAtPosition.includes('var(--')) {
     return;
   }
 
@@ -97,6 +97,6 @@ export function getHoverPreview(value: string) {
   </svg>
   `;
 
-  datauri.format(".svg", src);
+  datauri.format('.svg', src);
   return `![](${datauri.content})`;
 }
