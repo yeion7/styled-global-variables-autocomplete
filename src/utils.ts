@@ -28,11 +28,10 @@ export const getCompletionItem = ({
   isVarPresent,
 }: ItemBase) => {
   const variable = name;
-  const variableWithoutDash = variable.substring(1);
   const completion = new vscode.CompletionItem(variable);
 
   completion.label = name;
-  completion.filterText = variableWithoutDash;
+  completion.filterText = variable;
   completion.documentation = value;
   completion.insertText = isVarPresent
     ? `${variable}`
