@@ -30,6 +30,37 @@ const defaultConfig: Config = {
   ],
 };
 
+function extractVarsFromDocument(document) {
+  const file = document.getText();
+  const vars = new Map();
+  return file
+    .split(/\r?\n/)
+    .map((line, i) => {
+      const lineTrim = line.trim();
+      const isVariable = line.trim().startsWith('--');
+      if (!isVariable) {
+        return;
+      }
+      const [name, rawValue] = lineTrim.split(':');
+      const value = rawValue.trim().replace(';', '');
+      // Prevent duplicate or empty variables
+      if (!value || vars.has(name)) {
+        return;
+      }
+      vars.set(name, value);
+      return {
+        name,
+        value,
+        uri: document.uri,
+        range: new vscode.Range(
+          new vscode.Position(i, 4),
+          new vscode.Position(i, name.length + 4)
+        ),
+      };
+    })
+    .filter(Boolean);
+}
+
 export async function activate(context: vscode.ExtensionContext) {
   console.log(
     'Congratulations, your extension "styled-global-variable-autocomplete" is now active!'
@@ -61,40 +92,7 @@ export async function activate(context: vscode.ExtensionContext) {
   const documents = await Promise.all(filesPromises);
 
   // Get all variables from lines
-  const finalItems = documents.flatMap((document) => {
-    const file = document.getText();
-    const vars = new Map();
-
-    return file
-      .split(/\r?\n/)
-      .map((line, i) => {
-        const lineTrim = line.trim();
-        const isVariable = line.trim().startsWith('--');
-        if (!isVariable) {
-          return;
-        }
-
-        const [name, rawValue] = lineTrim.split(':');
-        const value = rawValue.trim().replace(';', '');
-
-        // Prevent duplicate or empty variables
-        if (!value || vars.has(name)) {
-          return;
-        }
-
-        vars.set(name, value);
-        return {
-          name,
-          value,
-          uri: document.uri,
-          range: new vscode.Range(
-            new vscode.Position(i, 4),
-            new vscode.Position(i, name.length + 4)
-          ),
-        } as Var;
-      })
-      .filter(Boolean) as Var[];
-  });
+  const finalItems = documents.flatMap(extractVarsFromDocument);
 
   // Support autocomplete
   const completionProvider = vscode.languages.registerCompletionItemProvider(
@@ -110,16 +108,19 @@ export async function activate(context: vscode.ExtensionContext) {
         const currentLine = document.lineAt(position.line);
         const isCssPropLine = currentLine.text.includes('css={{');
         const isVarPresent = currentLine.text.includes('var(');
+        const itemsInThisDocument = extractVarsFromDocument(document);
 
-        const variables = finalItems.map(({ name, value }) =>
-          getCompletionItem({
-            name,
-            value,
-            range,
-            isCssPropLine,
-            isVarPresent,
-          })
-        );
+        const variables = itemsInThisDocument
+          .concat(finalItems)
+          .map(({ name, value }) =>
+            getCompletionItem({
+              name,
+              value,
+              range,
+              isCssPropLine,
+              isVarPresent,
+            })
+          );
 
         return variables;
       },
@@ -140,7 +141,9 @@ export async function activate(context: vscode.ExtensionContext) {
           return [];
         }
 
-        return finalItems
+        const itemsInThisDocument = extractVarsFromDocument(document);
+        return itemsInThisDocument
+          .concat(finalItems)
           .filter(({ name }) => variable === name)
           .map(({ name, uri, range }) => new vscode.Location(uri, range));
       },
@@ -158,7 +161,9 @@ export async function activate(context: vscode.ExtensionContext) {
         return null;
       }
 
-      const variableItem = finalItems.find(({ name }) => name === variable);
+      const itemsInThisDocument = extractVarsFromDocument(document);
+      const variableItem = itemsInThisDocument
+        .concat(finalItems).find(({ name }) => name === variable);
 
       if (!variableItem) {
         return null;
