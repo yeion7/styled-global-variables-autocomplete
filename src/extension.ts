@@ -30,7 +30,7 @@ const defaultConfig: Config = {
   ],
 };
 
-function extractVarsFromDocument(document) {
+function extractVarsFromDocument(document: vscode.TextDocument): Var[] {
   const file = document.getText();
   const vars = new Map();
   return file
@@ -58,7 +58,7 @@ function extractVarsFromDocument(document) {
         ),
       };
     })
-    .filter(Boolean);
+    .filter(Boolean) as Var[];
 }
 
 export async function activate(context: vscode.ExtensionContext) {
