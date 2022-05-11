@@ -5,6 +5,7 @@ import {
   getCompletionItem,
   getHoverPreview,
   getVariableAtPosition,
+  logger,
 } from './utils';
 
 type Var = {
@@ -32,6 +33,8 @@ const defaultConfig: Config = {
 
 function extractVarsFromDocument(document: vscode.TextDocument): Var[] {
   const file = document.getText();
+
+  logger.appendLine(`\n  * ${document.fileName}`);
   const vars = new Map();
   return file
     .split(/\r?\n/)
@@ -48,6 +51,7 @@ function extractVarsFromDocument(document: vscode.TextDocument): Var[] {
         return;
       }
       vars.set(name, value);
+      logger.appendLine(`    ${name}: ${value}`);
       return {
         name,
         value,
@@ -62,7 +66,7 @@ function extractVarsFromDocument(document: vscode.TextDocument): Var[] {
 }
 
 export async function activate(context: vscode.ExtensionContext) {
-  console.log(
+  logger.appendLine(
     'Congratulations, your extension "styled-global-variable-autocomplete" is now active!'
   );
   const config = vscode.workspace.getConfiguration('variablesAutocomplete');
@@ -92,7 +96,12 @@ export async function activate(context: vscode.ExtensionContext) {
   const documents = await Promise.all(filesPromises);
 
   // Get all variables from lines
+  logger.append('\nFound the following variables;');
   const finalItems = documents.flatMap(extractVarsFromDocument);
+
+  logger.appendLine(
+    '\nStart dynamically watching current file for local variables;'
+  );
 
   // Support autocomplete
   const completionProvider = vscode.languages.registerCompletionItemProvider(
@@ -104,9 +113,20 @@ export async function activate(context: vscode.ExtensionContext) {
         token,
         context
       ) {
-        const range = document.getWordRangeAtPosition(position, /\S+/);
+        const range = document.getWordRangeAtPosition(
+          position,
+          /(?<=[^\S]|['"`(:]|^)-+([a-z0-9-_]*)/i
+        );
+        if (!range) {
+          return [];
+        }
+        const maybeQuotedText = document.getText(
+          range.with(range.start.translate(0, -1), range.end.translate(0, 1))
+        );
         const currentLine = document.lineAt(position.line);
-        const isCssPropLine = currentLine.text.includes('css={{');
+        const isCssPropLine =
+          !maybeQuotedText.match(/['"`]/) &&
+          currentLine.text.includes('css={{');
         const isVarPresent = currentLine.text.includes('var(');
         const itemsInThisDocument = extractVarsFromDocument(document);
 
@@ -163,7 +183,8 @@ export async function activate(context: vscode.ExtensionContext) {
 
       const itemsInThisDocument = extractVarsFromDocument(document);
       const variableItem = itemsInThisDocument
-        .concat(finalItems).find(({ name }) => name === variable);
+        .concat(finalItems)
+        .find(({ name }) => name === variable);
 
       if (!variableItem) {
         return null;
@@ -181,4 +202,4 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 
 // this method is called when your extension is deactivated
-export function deactivate() { }
+export function deactivate() {}

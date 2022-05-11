@@ -12,6 +12,10 @@ type ItemBase = {
   isVarPresent: boolean;
 };
 
+export const logger = vscode.window.createOutputChannel(
+  'Styled Global Variables Autocomplete'
+);
+
 export const getValueKind = (str: string): vscode.CompletionItemKind => {
   if (isColor(str)) {
     return vscode.CompletionItemKind.Color;
