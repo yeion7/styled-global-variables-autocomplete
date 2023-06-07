@@ -2,7 +2,7 @@
   "name": "styled-global-variables-autocomplete",
   "displayName": "Styled Global Variables Autocomplete",
   "description": "Autocomplete css variables from styled-component global style",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "publisher": "yeion7",
   "icon": "media/telescope.png",
   "engines": {
