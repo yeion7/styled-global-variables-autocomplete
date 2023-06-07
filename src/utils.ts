@@ -9,8 +9,12 @@ type ItemBase = {
   value: string;
   range: vscode.Range | undefined;
   isCssPropLine: boolean;
-  isVarPresent: boolean;
+  currentLine: vscode.TextLine;
 };
+
+export const logger = vscode.window.createOutputChannel(
+  'Styled Global Variables Autocomplete'
+);
 
 export const getValueKind = (str: string): vscode.CompletionItemKind => {
   if (isColor(str)) {
@@ -25,28 +29,41 @@ export const getCompletionItem = ({
   value,
   range,
   isCssPropLine,
-  isVarPresent,
+  currentLine,
 }: ItemBase) => {
   const variable = name;
   const completion = new vscode.CompletionItem(variable);
+  const isVarPresent = currentLine.text.includes('var(');
 
   completion.label = name;
   completion.filterText = variable;
   completion.documentation = value;
-  completion.insertText = isVarPresent
-    ? `${variable}`
-    : isCssPropLine
-      ? `'var(${variable})'`
-      : `var(${variable})`;
   completion.detail = value;
   completion.kind = getValueKind(value);
-
-  if (range) {
+  completion.range = range || completion.range;
+  
+  if (range && isVarPresent) {
+    const lineStart = currentLine.text.substring(0, range.start.character);
+    const replaceStartIndex = lineStart.indexOf('var(');
+    const startTranslate = range.start.character - (replaceStartIndex + 4);
+    const lineEnd = currentLine.text.substring(range.end.character);
+    completion.insertText = `${variable}`;
+    if (!lineEnd.includes(')')) {
+      completion.insertText += ')';
+    }
     completion.range = isVarPresent
-      ? range.with(range.start.translate(0, 4), range.end.translate(0, -1))
+      ? range.with(
+          range.start.translate(0, startTranslate),
+          range.end.translate(0, -startTranslate)
+        )
       : range;
+  } else if (isVarPresent) {
+    completion.insertText = `${variable}`;
+  } else if (isCssPropLine) {
+    completion.insertText = `'var(${variable})'`;
+  } else {
+    completion.insertText = `var(${variable})`;
   }
-
   return completion;
 };
 
